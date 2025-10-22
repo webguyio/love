@@ -12,6 +12,17 @@ async function checkRateLimit( request, env ) {
 	await env.LOVE_COUNTS.put( rateLimitKey, Date.now().toString(), { expirationTtl: 60 } );
 	return true;
 }
+function normalizeUrl( url ) {
+	try {
+		const parsed = new URL( url );
+		let path = parsed.pathname + parsed.search + parsed.hash;
+		if( path === '/' ) path = '';
+		return parsed.hostname.replace( /^www\./, '' ) + path;
+	} catch( e ) {
+		const cleaned = url.replace( /^(https?:\/\/)?(www\.)?/, '' );
+		return cleaned;
+	}
+}
 export async function onRequestGet( { request, env } ) {
 	const url = new URL( request.url );
 	const targetUrl = url.searchParams.get( 'url' );
@@ -21,7 +32,8 @@ export async function onRequestGet( { request, env } ) {
 			headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 		} );
 	}
-	const count = await env.LOVE_COUNTS.get( targetUrl );
+	const normalizedUrl = normalizeUrl( targetUrl );
+	const count = await env.LOVE_COUNTS.get( normalizedUrl );
 	return new Response( JSON.stringify( { count: count ? parseInt( count ) : 0 } ), {
 		headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 	} );
@@ -49,14 +61,15 @@ export async function onRequestPost( { request, env } ) {
 				headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 			} );
 		}
-		const currentCount = await env.LOVE_COUNTS.get( url );
+		const normalizedUrl = normalizeUrl( url );
+		const currentCount = await env.LOVE_COUNTS.get( normalizedUrl );
 		let newCount = currentCount ? parseInt( currentCount ) : 0;
 		if( action === 'like' ) {
 			newCount++;
 		} else if( action === 'unlike' && newCount > 0 ) {
 			newCount--;
 		}
-		await env.LOVE_COUNTS.put( url, newCount.toString() );
+		await env.LOVE_COUNTS.put( normalizedUrl, newCount.toString() );
 		return new Response( JSON.stringify( { count: newCount } ), {
 			headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 		} );

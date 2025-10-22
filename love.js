@@ -1,13 +1,13 @@
 (function() {
 	'use strict';
 	const API_URL = 'https://lovers.pages.dev/api/love';
-	const HEART_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="love-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>';
+	const HEART_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="love-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>';
 	const CSS = `
 .love-button{display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-decoration:none;color:inherit;border:none;background:none;padding:4px 8px;font-size:14px;transition:transform .1s ease;}
 .love-button:hover{transform:scale(1.05);}
 .love-button:active{transform:scale(0.95);}
-.love-heart{transition:all .3s ease;}
-.love-button.loved .love-heart{fill:currentColor;animation:love-pop .3s ease;}
+.love-button svg{transition:all .3s ease;}
+.love-button.loved svg{animation:love-pop .3s ease;}
 .love-count{font-weight:500;min-width:20px;text-align:left;}
 @keyframes love-pop{0%{transform:scale(1);}50%{transform:scale(1.3);}100%{transform:scale(1);}}
 `;
@@ -89,8 +89,16 @@
 		}
 		if( loved ) {
 			button.classList.add( 'loved' );
+			const svgs = button.querySelectorAll( 'svg' );
+			svgs.forEach( svg => {
+				svg.style.fill = 'currentColor';
+			} );
 		} else {
 			button.classList.remove( 'loved' );
+			const svgs = button.querySelectorAll( 'svg' );
+			svgs.forEach( svg => {
+				svg.style.fill = 'none';
+			} );
 		}
 	}
 	async function handleClick( e, button ) {
@@ -106,7 +114,7 @@
 	}
 	async function initButton( button ) {
 		const url = getTargetUrl( button );
-		if( button.children.length === 0 || button.textContent.trim() === 'Like' ) {
+		if( button.children.length === 0 && button.textContent.trim() === '' ) {
 			button.innerHTML = HEART_SVG;
 		}
 		const count = await fetchCount( url );
