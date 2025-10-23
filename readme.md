@@ -19,3 +19,7 @@ Look up counts for existing URLs:
 Specify the URL (including query or hashtag) and set custom button content (including text, image, svg, or emoji):
 
 `<a href="https://example.com/#test" class="love-button">👍</a>`
+
+### Recommended Icons
+
+[https://lucide.dev/](https://lucide.dev/)
