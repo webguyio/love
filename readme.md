@@ -6,7 +6,7 @@ This is a simple, privacy-friendly solution/replacement for the "Like Button" wi
 
 Add to header or footer of your website:
 
-`<script src="https://lovers.pages.dev/love.js"></script>`
+`<script src="https://bttn.love/love.js"></script>`
 
 Add anywhere on your webpages:
 
@@ -14,7 +14,7 @@ Add anywhere on your webpages:
 
 Look up counts for existing URLs:
 
-`https://lovers.pages.dev/api/love?url=https://example.com/`
+`https://bttn.love/api/love?url=https://example.com/`
 
 ## Custom Usage
 

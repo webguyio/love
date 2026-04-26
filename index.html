@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="A simple, privacy-friendly like button with persistent counts for any URL.">
+	<meta name="keywords" content="like button, love button, javascript, widget, open source">
+	<meta name="theme-color" content="#ff2d78">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://bttn.love/">
+	<meta property="og:title" content="bttn.love">
+	<meta property="og:description" content="A simple, privacy-friendly like button with persistent counts for any URL.">
+	<meta property="og:image" content="https://bttn.love/icon.png">
+	<meta name="twitter:image" content="https://bttn.love/icon.png">
+	<meta name="twitter:card" content="summary_large_image">
+
+	<title>bttn.love | A Beautiful Like Button for Any Website</title>
+
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23222228'/%3E%3Cg transform='translate(20%2C22) scale(2.5)'%3E%3Cpath d='M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5' fill='%23ff2d78' stroke='none'/%3E%3C/g%3E%3C/svg%3E" type="image/svg+xml">
+	<link rel="apple-touch-icon" href="icon.png">
+	<link rel="canonical" href="https://bttn.love/">
+
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org/",
+		"@type": "WebSite",
+		"name": "bttn.love",
+		"url": "https://bttn.love/"
+	}
+	</script>
+
+	<style>
+		*, *::before, *::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		:root {
+			--pink: #ff2d78;
+			--pink-dim: #c4175a;
+			--pink-glow: rgba(255, 45, 120, 0.35);
+			--bg: #111113;
+			--bg2: #18181c;
+			--bg3: #222228;
+			--text: #f0eef4;
+			--muted: #9991a8;
+			--border: rgba(255, 45, 120, 0.18);
+			--font-serif: "Georgia Pro", "Palatino Linotype", Georgia, serif;
+			--font-mono: "Courier New", Courier, monospace;
+		}
+
+		html {
+			scroll-behavior: smooth;
+		}
+
+		body {
+			background: var(--bg);
+			color: var(--text);
+			font-family: var(--font-serif);
+			min-height: 100vh;
+			overflow-x: hidden;
+		}
+
+		/* Grain overlay */
+		body::before {
+			content: "";
+			position: fixed;
+			inset: 0;
+			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+			pointer-events: none;
+			z-index: 100;
+			opacity: 0.5;
+		}
+
+		.skip-link {
+			position: absolute;
+			top: -100%;
+			left: 1rem;
+			background: var(--pink);
+			color: #fff;
+			padding: 0.5rem 1rem;
+			z-index: 999;
+			font-family: var(--font-serif);
+		}
+
+		.skip-link:focus {
+			top: 1rem;
+		}
+
+		/* Header */
+		#header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 1.5rem 2.5rem;
+			border-bottom: 1px solid var(--border);
+			position: sticky;
+			top: 0;
+			background: rgba(17, 17, 19, 0.92);
+			backdrop-filter: blur(12px);
+			z-index: 50;
+		}
+
+		#logo {
+			font-size: 1.5rem;
+			font-weight: 700;
+			color: var(--text);
+			text-decoration: none;
+			letter-spacing: -0.03em;
+		}
+
+		#logo span {
+			color: var(--pink);
+		}
+
+		#header-actions {
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+		}
+
+		.btn-github {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			color: var(--muted);
+			text-decoration: none;
+			font-family: var(--font-mono);
+			font-size: 0.8rem;
+			letter-spacing: 0.05em;
+			transition: color 0.2s;
+		}
+
+		.btn-github:hover {
+			color: var(--text);
+		}
+
+		.btn-donate {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			background: var(--pink);
+			color: #fff;
+			text-decoration: none;
+			padding: 0.5rem 1.25rem;
+			font-family: var(--font-serif);
+			font-size: 0.9rem;
+			font-weight: 700;
+			letter-spacing: 0.02em;
+			transition: background 0.2s, transform 0.1s;
+			clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+		}
+
+		.btn-donate:hover {
+			background: var(--pink-dim);
+			transform: translateY(-1px);
+		}
+
+		/* Hero */
+		#hero {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			padding: 6rem 2rem 4rem;
+			position: relative;
+		}
+
+		#hero::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 600px;
+			height: 600px;
+			background: radial-gradient(ellipse at center, var(--pink-glow) 0%, transparent 70%);
+			pointer-events: none;
+		}
+
+		.hero-eyebrow {
+			font-family: var(--font-mono);
+			font-size: 0.75rem;
+			letter-spacing: 0.2em;
+			text-transform: uppercase;
+			color: var(--pink);
+			margin-bottom: 1.5rem;
+			animation: fade-up 0.6s ease both;
+		}
+
+		h1 {
+			font-size: clamp(3rem, 10vw, 7rem);
+			font-weight: 700;
+			line-height: 0.95;
+			letter-spacing: -0.04em;
+			margin-bottom: 1.5rem;
+			animation: fade-up 0.6s 0.1s ease both;
+		}
+
+		h1 em {
+			font-style: italic;
+			color: var(--pink);
+		}
+
+		.hero-sub {
+			font-size: clamp(1rem, 2.5vw, 1.3rem);
+			color: var(--muted);
+			max-width: 560px;
+			line-height: 1.6;
+			margin-bottom: 3.5rem;
+			animation: fade-up 0.6s 0.2s ease both;
+		}
+
+		/* Demo */
+		#demo {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 1.5rem;
+			margin-bottom: 3rem;
+			animation: fade-up 0.6s 0.3s ease both;
+		}
+
+		.demo-label {
+			font-family: var(--font-mono);
+			font-size: 0.7rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: var(--muted);
+		}
+
+		/* Override love button styles for demo */
+		#demo .love-button {
+			font-size: 20px !important;
+			padding: 12px 20px !important;
+			color: var(--pink) !important;
+			border: 2px solid var(--border) !important;
+			background: var(--bg2) !important;
+			border-radius: 0 !important;
+			transition: transform 0.1s ease, border-color 0.2s, box-shadow 0.2s !important;
+			clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+		}
+
+		#demo .love-button:hover,
+		#demo .love-button:focus {
+			border-color: var(--pink) !important;
+			box-shadow: 0 0 32px var(--pink-glow) !important;
+			transform: scale(1.05) !important;
+		}
+
+		#demo .love-button svg {
+			width: 48px !important;
+			height: 48px !important;
+		}
+
+		/* Install */
+		#install {
+			padding: 5rem 2rem;
+			max-width: 800px;
+			margin: 0 auto;
+		}
+
+		.section-label {
+			font-family: var(--font-mono);
+			font-size: 0.7rem;
+			letter-spacing: 0.2em;
+			text-transform: uppercase;
+			color: var(--pink);
+			margin-bottom: 1rem;
+		}
+
+		h2 {
+			font-size: clamp(2rem, 5vw, 3.5rem);
+			font-weight: 700;
+			letter-spacing: -0.03em;
+			line-height: 1;
+			margin-bottom: 3rem;
+		}
+
+		.steps {
+			display: flex;
+			flex-direction: column;
+			gap: 1.5rem;
+		}
+
+		.step {
+			display: grid;
+			grid-template-columns: 3rem 1fr;
+			gap: 1.5rem;
+			align-items: start;
+			padding: 1.5rem;
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			position: relative;
+			overflow: hidden;
+		}
+
+		.step::before {
+			content: "";
+			position: absolute;
+			left: 0;
+			top: 0;
+			bottom: 0;
+			width: 3px;
+			background: var(--pink);
+		}
+
+		.step-num {
+			font-size: 2.5rem;
+			font-weight: 700;
+			color: var(--border);
+			line-height: 1;
+			font-style: italic;
+		}
+
+		.step-content h3 {
+			font-size: 1.1rem;
+			font-weight: 700;
+			margin-bottom: 0.75rem;
+			letter-spacing: -0.01em;
+		}
+
+		.step-content p {
+			color: var(--muted);
+			font-size: 0.95rem;
+			line-height: 1.6;
+			margin-bottom: 0.75rem;
+		}
+
+		.step-content p:last-child {
+			margin-bottom: 0;
+		}
+
+		code {
+			font-family: var(--font-mono);
+			font-size: 0.85em;
+			background: var(--bg3);
+			border: 1px solid var(--border);
+			padding: 0.15em 0.4em;
+			color: var(--pink);
+		}
+
+		pre {
+			font-family: var(--font-mono);
+			font-size: 0.85rem;
+			background: var(--bg3);
+			border: 1px solid var(--border);
+			padding: 1rem 1.25rem;
+			overflow-x: auto;
+			color: var(--text);
+			line-height: 1.6;
+		}
+
+		pre .c {
+			color: var(--muted);
+		}
+
+		/* Features */
+		#features {
+			padding: 5rem 2rem;
+			max-width: 800px;
+			margin: 0 auto;
+			border-top: 1px solid var(--border);
+		}
+
+		.feature-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			gap: 1.5rem;
+			margin-top: 3rem;
+		}
+
+		.feature {
+			padding: 1.5rem;
+			background: var(--bg2);
+			border: 1px solid var(--border);
+		}
+
+		.feature-icon {
+			color: var(--pink);
+			margin-bottom: 1rem;
+		}
+
+		.feature h3 {
+			font-size: 1rem;
+			font-weight: 700;
+			margin-bottom: 0.5rem;
+			letter-spacing: -0.01em;
+		}
+
+		.feature p {
+			font-size: 0.9rem;
+			color: var(--muted);
+			line-height: 1.6;
+		}
+
+		/* CTA */
+		#cta {
+			padding: 6rem 2rem;
+			text-align: center;
+			border-top: 1px solid var(--border);
+			position: relative;
+			overflow: hidden;
+		}
+
+		#cta::before {
+			content: "";
+			position: absolute;
+			bottom: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 800px;
+			height: 400px;
+			background: radial-gradient(ellipse at bottom, var(--pink-glow) 0%, transparent 70%);
+			pointer-events: none;
+		}
+
+		#cta h2 {
+			margin-bottom: 1rem;
+		}
+
+		#cta p {
+			color: var(--muted);
+			font-size: 1.1rem;
+			margin-bottom: 2.5rem;
+		}
+
+		.cta-buttons {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+
+		.btn-primary {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			background: var(--pink);
+			color: #fff;
+			text-decoration: none;
+			padding: 0.9rem 2rem;
+			font-family: var(--font-serif);
+			font-size: 1rem;
+			font-weight: 700;
+			transition: background 0.2s, transform 0.1s;
+			clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+		}
+
+		.btn-primary:hover {
+			background: var(--pink-dim);
+			transform: translateY(-2px);
+		}
+
+		.btn-secondary {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			background: transparent;
+			color: var(--text);
+			text-decoration: none;
+			padding: 0.9rem 2rem;
+			font-family: var(--font-serif);
+			font-size: 1rem;
+			font-weight: 700;
+			border: 1px solid var(--border);
+			transition: border-color 0.2s, transform 0.1s;
+			clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+		}
+
+		.btn-secondary:hover {
+			border-color: var(--pink);
+			transform: translateY(-2px);
+		}
+
+		/* Footer */
+		#footer {
+			padding: 2rem 2.5rem;
+			border-top: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 1rem;
+			font-family: var(--font-mono);
+			font-size: 0.75rem;
+			color: var(--muted);
+			letter-spacing: 0.05em;
+		}
+
+		#footer a {
+			color: var(--muted);
+			text-decoration: none;
+			transition: color 0.2s;
+		}
+
+		#footer a:hover {
+			color: var(--pink);
+		}
+
+		@keyframes fade-up {
+			from {
+				opacity: 0;
+				transform: translateY(20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		@media (max-width: 600px) {
+			#header {
+				padding: 1rem 1.25rem;
+			}
+			.btn-github span {
+				display: none;
+			}
+			#hero {
+				padding: 4rem 1.25rem 3rem;
+			}
+			#install, #features {
+				padding: 3rem 1.25rem;
+			}
+			.step {
+				grid-template-columns: 2rem 1fr;
+				gap: 1rem;
+			}
+			.step-num {
+				font-size: 1.8rem;
+			}
+			#cta {
+				padding: 4rem 1.25rem;
+			}
+			#footer {
+				padding: 1.5rem 1.25rem;
+				flex-direction: column;
+				align-items: flex-start;
+			}
+		}
+	</style>
+
+</head>
+
+<body>
+
+	<a href="#content" class="skip-link">Skip to content</a>
+
+	<header id="header">
+
+		<a href="./" id="logo">bttn<span>.</span>love</a>
+
+		<div id="header-actions">
+			<a href="https://github.com/webguyio/love" class="btn-github" target="_blank" rel="noopener">
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+				<span>GitHub</span>
+			</a>
+			<a href="https://github.com/sponsors/webguyio" class="btn-donate" target="_blank" rel="noopener">
+				<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>
+				Donate
+			</a>
+		</div>
+
+	</header>
+
+	<main id="content">
+
+		<section id="hero">
+
+			<p class="hero-eyebrow">Open Source &middot; Privacy Friendly &middot; Free</p>
+
+			<h1>The <em>love</em> button<br>for any website.</h1>
+
+			<p class="hero-sub">Drop one line of code on your site. Let visitors like any page. Counts stored centrally, no tracking, no accounts.</p>
+
+			<div id="demo">
+				<p class="demo-label">Live demo: try it</p>
+				<a class="love-button"></a>
+			</div>
+
+		</section>
+
+		<section id="install" aria-labelledby="install-heading">
+
+			<p class="section-label">Get started</p>
+			<h2 id="install-heading">Two lines.<br>That's it.</h2>
+
+			<div class="steps">
+
+				<div class="step">
+					<span class="step-num" aria-hidden="true">1</span>
+					<div class="step-content">
+						<h3>Add the script</h3>
+						<p>Paste this into your <code>&lt;head&gt;</code> or before <code>&lt;/body&gt;</code>:</p>
+						<pre>&lt;script src="https://bttn.love/love.js"&gt;&lt;/script&gt;</pre>
+					</div>
+				</div>
+
+				<div class="step">
+					<span class="step-num" aria-hidden="true">2</span>
+					<div class="step-content">
+						<h3>Add the button</h3>
+						<p>Place this anywhere on the page. It auto-detects the current URL:</p>
+						<pre>&lt;a class="love-button"&gt;&lt;/a&gt;</pre>
+						<p>Or point it at a specific URL:</p>
+						<pre>&lt;a href="https://example.com/post/" class="love-button"&gt;&lt;/a&gt;</pre>
+					</div>
+				</div>
+
+				<div class="step">
+					<span class="step-num" aria-hidden="true">3</span>
+					<div class="step-content">
+						<h3>Customize (optional)</h3>
+						<p>Use any content inside the button: text, emoji, or your own SVG icon.</p>
+						<pre>&lt;a href="https://example.com/#post" class="love-button"&gt;<span class="c">&#x1F44D;</span>&lt;/a&gt;</pre>
+						<p>Look up the count for any URL via the API:</p>
+						<pre>https://bttn.love/api/love?url=https://example.com/</pre>
+					</div>
+				</div>
+
+				<div class="step">
+					<span class="step-num" aria-hidden="true">4</span>
+					<div class="step-content">
+						<h3>WordPress plugin</h3>
+						<p>Using WordPress? Install the official plugin instead:</p>
+						<pre>https://wordpress.org/plugins/love-button/</pre>
+					</div>
+				</div>
+
+			</div>
+
+		</section>
+
+		<section id="features" aria-labelledby="features-heading">
+
+			<p class="section-label">Why bttn.love</p>
+			<h2 id="features-heading">Built right.</h2>
+
+			<div class="feature-grid">
+
+				<div class="feature">
+					<div class="feature-icon">
+						<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+					</div>
+					<h3>Privacy first</h3>
+					<p>No analytics, no cookies, no tracking. IPs are never logged.</p>
+				</div>
+
+				<div class="feature">
+					<div class="feature-icon">
+						<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+					</div>
+					<h3>One line install</h3>
+					<p>No build step, no npm, no config. Just a script tag.</p>
+				</div>
+
+				<div class="feature">
+					<div class="feature-icon">
+						<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+					</div>
+					<h3>Works anywhere</h3>
+					<p>Any URL, any site, any framework. Counts are universal and persistent.</p>
+				</div>
+
+				<div class="feature">
+					<div class="feature-icon">
+						<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+					</div>
+					<h3>Public domain</h3>
+					<p>No license required. Use it, fork it, modify it however you want.</p>
+				</div>
+
+				<div class="feature">
+					<div class="feature-icon">
+						<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+					</div>
+					<h3>Facebook Like replacement</h3>
+					<p>A clean, self-hosted alternative to the Facebook Like button, without the tracking.</p>
+				</div>
+
+			</div>
+
+		</section>
+
+		<section id="cta" aria-labelledby="cta-heading">
+
+			<h2 id="cta-heading">Spread the <em>love.</em></h2>
+			<p>Free to use. Open source. Help keep it running.</p>
+
+			<div class="cta-buttons">
+				<a href="https://github.com/sponsors/webguyio" class="btn-primary" target="_blank" rel="noopener">
+					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>
+					Donate on GitHub
+				</a>
+				<a href="https://github.com/webguyio/love" class="btn-secondary" target="_blank" rel="noopener">
+					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+					View on GitHub
+				</a>
+			</div>
+
+		</section>
+
+	</main>
+
+	<footer id="footer">
+
+		<span>bttn.love &middot; Public Domain</span>
+
+		<nav aria-label="Footer">
+			<a href="https://github.com/webguyio/love" target="_blank" rel="noopener">GitHub</a>
+			&nbsp;&middot;&nbsp;
+			<a href="https://github.com/sponsors/webguyio" target="_blank" rel="noopener">Donate</a>
+			&nbsp;&middot;&nbsp;
+			<a href="https://bttn.love/api/love?url=https://bttn.love/" target="_blank" rel="noopener">API</a>
+		</nav>
+
+	</footer>
+
+	<script src="https://bttn.love/love.js"></script>
+
+</body>
+
+</html>
