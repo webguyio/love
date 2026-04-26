@@ -337,6 +337,8 @@
 			overflow-x: auto;
 			color: var(--pink);
 			line-height: 1.6;
+			white-space: pre-wrap;
+			word-break: break-all;
 		}
 
 		pre + p {
@@ -518,7 +520,7 @@
 				padding-top: 0;
 			}
 			.step {
-				grid-template-columns: 2rem 1fr;
+				grid-template-columns: 1fr;
 				gap: 1rem;
 			}
 			.step-num {
@@ -606,7 +608,7 @@
 					<span class="step-num" aria-hidden="true">3</span>
 					<div class="step-content">
 						<h3>Customize (optional)</h3>
-						<p>Use any content inside the button: text, emoji, or your own SVG icon.</p>
+						<p>Use any content inside the button: text, emoji, or your own SVG icon:</p>
 						<pre>&lt;a href="https://example.com/#post" class="love-button"&gt;<span class="c">&#x1F44D;</span>&lt;/a&gt;</pre>
 						<p>Look up the count for any URL via the API:</p>
 						<pre>https://bttn.love/api/love?url=https://example.com/</pre>
