@@ -10,6 +10,7 @@
 		.love-button.loved svg{animation:love-pop .3s ease}
 		.love-count{min-width:1ch;font-weight:500;text-align:center}
 		.love-count.zero{visibility:hidden}
+		.love-custom{font-size:32px;margin-top:5px}
 		@keyframes love-pop{0%{transform:scale(1);}50%{transform:scale(1.3);}100%{transform:scale(1)}}
 	`;
 	function injectStyles() {
@@ -118,6 +119,8 @@
 		const url = getTargetUrl( button );
 		if ( button.children.length === 0 && button.textContent.trim() === '' ) {
 			button.innerHTML = '<span class="love-count zero">0</span>' + HEART_SVG;
+		} else {
+			button.innerHTML = '<span class="love-custom">' + button.innerHTML + '</span>';
 		}
 		const count = await fetchCount( url );
 		const loved = isLoved( url );
