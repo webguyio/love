@@ -1,10 +1,10 @@
 # Love Button (love.js)
 
-This is a simple, privacy-friendly solution/replacement for the "Like Button" with persistent like counts (stored centrally for any URL).
+This is a simple, privacy-friendly replacement/alternative for the Facebook "Like Button" with persistent like counts (stored centrally for any URL).
 
 ## Default Usage
 
-Add to header or footer of your website:
+Add to the header or footer of your website:
 
 `<script src="https://bttn.love/love.js"></script>`
 
@@ -25,6 +25,12 @@ Specify the URL (including query or hashtag) and set custom button content (incl
 ### Recommended Icons
 
 [https://lucide.dev/](https://lucide.dev/)
+
+## WordPress
+
+Also available as a plugin:
+
+[https://wordpress.org/plugins/love-button/](https://wordpress.org/plugins/love-button/)
 
 ## License
 
