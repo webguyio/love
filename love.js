@@ -74,45 +74,47 @@
 			return null;
 		}
 	}
+	function formatCount( count ) {
+		if ( count >= 1000000 ) return ( count / 1000000 ).toFixed( 1 ).replace( /\.0$/, '' ) + 'm';
+		if ( count >= 1000 ) return ( count / 1000 ).toFixed( 1 ).replace( /\.0$/, '' ) + 'k';
+		return count > 0 ? String( count ) : '0';
+	}
 	function updateButton( button, count, loved ) {
 		const countEl = button.querySelector( '.love-count' );
 		if ( !countEl ) {
 			const span = document.createElement( 'span' );
 			span.className = 'love-count';
-			span.textContent = count > 0 ? count : '0';
+			span.textContent = formatCount( count );
 			span.classList.toggle( 'zero', count === 0 );
-			button.appendChild( span );
+			button.insertBefore( span, button.firstChild );
 		} else {
-			countEl.textContent = count > 0 ? count : '0';
+			countEl.textContent = formatCount( count );
 			countEl.classList.toggle( 'zero', count === 0 );
 		}
 		button.title = loved ? 'Unlike' : 'Like';
-		if ( loved ) {
-			button.classList.add( 'loved' );
-			const svgs = button.querySelectorAll( 'svg' );
-			svgs.forEach( svg => {
-				svg.style.fill = 'currentColor';
-			} );
-		} else {
-			button.classList.remove( 'loved' );
-			const svgs = button.querySelectorAll( 'svg' );
-			svgs.forEach( svg => {
-				svg.style.fill = 'none';
-			} );
-		}
+		button.setAttribute( 'aria-label', loved ? 'Unlike' : 'Like' );
+		button.setAttribute( 'aria-pressed', loved ? 'true' : 'false' );
+		button.classList.toggle( 'loved', loved );
+		button.querySelectorAll( 'svg' ).forEach( svg => {
+			svg.style.fill = loved ? 'currentColor' : 'none';
+		} );
 	}
 	async function handleClick( e, button ) {
 		e.preventDefault();
+		if ( button.dataset.inFlight ) return;
+		button.dataset.inFlight = '1';
 		const url = getTargetUrl( button );
 		const currentlyLoved = isLoved( url );
 		const action = currentlyLoved ? 'unlike' : 'like';
 		const newCount = await updateCount( url, action );
+		delete button.dataset.inFlight;
 		if ( newCount !== null ) {
 			setLoved( url, !currentlyLoved );
 			updateButton( button, newCount, !currentlyLoved );
 		}
 	}
 	async function initButton( button ) {
+		button.setAttribute( 'role', 'button' );
 		const url = getTargetUrl( button );
 		if ( button.children.length === 0 && button.textContent.trim() === '' ) {
 			button.innerHTML = '<span class="love-count zero">0</span>' + HEART_SVG;
@@ -121,6 +123,12 @@
 		const loved = isLoved( url );
 		updateButton( button, count, loved );
 		button.addEventListener( 'click', ( e ) => handleClick( e, button ) );
+		button.addEventListener( 'keydown', ( e ) => {
+			if ( e.key === ' ' ) {
+				e.preventDefault();
+				handleClick( e, button );
+			}
+		} );
 	}
 	function init() {
 		injectStyles();
